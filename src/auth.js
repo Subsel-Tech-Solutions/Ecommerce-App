@@ -2,12 +2,16 @@ const jwt = require('jsonwebtoken');
 const { db } = require('./db');
 const config = require('./config');
 
+// Shoppers and the back office use separate cookies, so an admin login never
+// shows up in the storefront (and a shopper session never unlocks /admin).
 const COOKIE = 'session';
+const ADMIN_COOKIE = 'admin_session';
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const cookieName = (role) => (role === 'admin' ? ADMIN_COOKIE : COOKIE);
 
 function issueSession(res, user) {
   const token = jwt.sign({ uid: user.id, role: user.role }, config.jwtSecret, { expiresIn: '7d' });
-  res.cookie(COOKIE, token, {
+  res.cookie(cookieName(user.role), token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: config.isProd,
@@ -16,20 +20,25 @@ function issueSession(res, user) {
   });
 }
 
-function clearSession(res) {
-  res.clearCookie(COOKIE, { path: '/' });
+function clearSession(res, role = 'customer') {
+  res.clearCookie(cookieName(role), { path: '/' });
 }
 
-// Attaches req.user when a valid session cookie is present (never blocks).
+function readCookie(req, name) {
+  const token = req.cookies?.[name];
+  if (!token) return null;
+  try {
+    const { uid } = jwt.verify(token, config.jwtSecret);
+    return db.prepare('SELECT id,name,email,phone,role FROM users WHERE id = ?').get(uid) || null;
+  } catch { return null; } // expired or tampered: treat as guest
+}
+
+// Attaches req.user (shopper) and req.admin (back office) when valid cookies are present (never blocks).
 function attachUser(req, _res, next) {
-  const token = req.cookies?.[COOKIE];
-  if (token) {
-    try {
-      const { uid } = jwt.verify(token, config.jwtSecret);
-      const user = db.prepare('SELECT id,name,email,phone,role FROM users WHERE id = ?').get(uid);
-      if (user) req.user = user;
-    } catch { /* expired or tampered: treat as guest */ }
-  }
+  const user = readCookie(req, COOKIE);
+  if (user && user.role !== 'admin') req.user = user;
+  const admin = readCookie(req, ADMIN_COOKIE);
+  if (admin && admin.role === 'admin') req.admin = admin;
   next();
 }
 
@@ -39,7 +48,7 @@ function requireAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.user || req.user.role !== 'admin') return res.status(403).json({ error: 'Admin access only.' });
+  if (!req.admin) return res.status(403).json({ error: 'Admin access only.' });
   next();
 }
 

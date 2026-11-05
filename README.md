@@ -13,7 +13,7 @@ A complete, mobile-first e-commerce site for an India-based packer of nuts, seed
 | Cart | Persistent cart (survives refresh), quantity changes, free-shipping progress meter, server-side price re-check |
 | Checkout | **Guest checkout** (email only) or logged-in checkout with saved addresses; Indian address validation (36 states/UTs, 6-digit PIN, 10-digit mobile) |
 | Payments | **Razorpay** (UPI, cards, net banking, wallets) with server-side signature verification + webhook; **Cash on Delivery** with a configurable order cap; retry payment for unpaid orders |
-| Accounts | Self-registration, login/logout, profile & password change, order history, saved addresses. Guest orders are auto-linked when that email registers later |
+| Accounts | Login / Sign-up page, account menu in the header, inline log-in or sign-up at checkout, wishlist (saved on device). Self-registration, login/logout, profile & password change, order history, saved addresses. Guest orders are auto-linked when that email registers later |
 | Order tracking | Guests track with order no. + email; secure per-order link; status timeline (confirmed → packed → shipped → delivered) |
 | Admin back office | `/admin` with tabs: **Orders** (search, status, cancel restores stock) · **Products** (create/edit/delete, photo upload, pack sizes with price/MRP/stock/SKU, GST class, HSN, live/featured toggles) · **Categories** (add/edit/nest/hide/delete with safety checks) · **Stock & prices** (bulk grid, +/- stock adjustments, low-stock filter) · **Taxes** (GST classes, default class, prices incl./excl. GST) · **Shipping** (standard fee, free-shipping threshold, COD on/off, COD limit & charge, state-based zones) · **Settings** (store name, contacts, address, GSTIN, FSSAI) |
 | GST | Per-product tax class; tax computed per line, stored on each order line with rate and HSN code; summary by rate shown at checkout. Works with tax-inclusive (default) or tax-exclusive pricing |
@@ -29,7 +29,7 @@ cp .env.example .env      # optional locally
 npm start                 # http://localhost:3000
 ```
 
-* Admin: `admin@example.com` / `ChangeMe@123` (set `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env` **before first start**).
+* Admin: sign in at **`/admin`** with `admin@example.com` / `ChangeMe@123` (set `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env` **before first start**). The back office uses its own session cookie, so it never appears in the shop's header and the shop's login form only accepts customer accounts.
 * Without Razorpay keys, "Pay online" opens a **demo payment** window so you can test the whole flow. Demo mode is switched off automatically when `NODE_ENV=production`.
 * `npm run reset-db` deletes the database; it re-seeds 16 sample products in a 3-level category tree on next start. Existing databases are upgraded automatically (new columns are added on start).
 * Uploaded product photos are stored in `data/uploads/` — back this folder up together with `data/store.db`.

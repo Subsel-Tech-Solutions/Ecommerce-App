@@ -33,7 +33,7 @@
     main.innerHTML = `<div class="wrap page">
       <div class="page-head" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
         <h1 style="margin:0">Back office</h1>
-        <div style="display:flex;gap:8px"><a class="btn btn-sm btn-ghost" href="/" data-link>View store</a><button class="btn btn-sm btn-ghost" id="logout">Log out</button></div></div>
+        <div style="display:flex;gap:8px"><a class="btn btn-sm btn-ghost" href="/" target="_blank" rel="noopener">View store ↗</a><button class="btn btn-sm btn-ghost" id="logout">Log out</button></div></div>
       <div class="stats">
         <div class="stat"><b>${stats.today.n}</b><span>Orders today (${money(stats.today.amt)})</span></div>
         <div class="stat"><b>${stats.toShip}</b><span>To pack & ship</span></div>
@@ -42,7 +42,7 @@
       </div>
       <nav class="admin-tabs">${TABS.map(([k, l]) => `<a class="chip ${k === tab ? 'active' : ''}" href="/admin?tab=${k}" data-link>${l}</a>`).join('')}</nav>
       <div id="adminBody"><div class="loading"><div class="spinner"></div></div></div></div>`;
-    $('#logout').onclick = async () => { await api('/api/auth/logout', { method: 'POST', body: {} }); state.user = null; location.href = '/'; };
+    $('#logout').onclick = async () => { await api('/api/auth/admin/logout', { method: 'POST', body: {} }); state.admin = null; location.href = '/admin'; };
     await VIEWS[tab]($('#adminBody'), params, stats);
   };
 

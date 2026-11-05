@@ -42,13 +42,27 @@ router.post('/login', authLimiter, (req, res) => {
   const email = str(req.body.email, 120).toLowerCase();
   const password = typeof req.body.password === 'string' ? req.body.password : '';
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user || !bcrypt.compareSync(password, user.password_hash))
+  // Staff accounts sign in at /admin, never through the shop's login form
+  if (!user || user.role === 'admin' || !bcrypt.compareSync(password, user.password_hash))
     return res.status(401).json({ error: 'Incorrect email or password.' });
   issueSession(res, user);
   res.json({ user: publicUser(user) });
 });
 
-router.post('/logout', (_req, res) => { clearSession(res); res.json({ ok: true }); });
+router.post('/logout', (_req, res) => { clearSession(res, 'customer'); res.json({ ok: true }); });
+
+// ---- Back-office login (separate cookie from shoppers) ----
+router.post('/admin/login', authLimiter, (req, res) => {
+  const email = str(req.body.email, 120).toLowerCase();
+  const password = typeof req.body.password === 'string' ? req.body.password : '';
+  const user = db.prepare("SELECT * FROM users WHERE email = ? AND role = 'admin'").get(email);
+  if (!user || !bcrypt.compareSync(password, user.password_hash))
+    return res.status(401).json({ error: 'Incorrect email or password.' });
+  issueSession(res, user);
+  res.json({ admin: publicUser(user) });
+});
+router.get('/admin/me', (req, res) => res.json({ admin: req.admin ? publicUser(req.admin) : null }));
+router.post('/admin/logout', (_req, res) => { clearSession(res, 'admin'); res.json({ ok: true }); });
 
 router.get('/me', (req, res) => res.json({ user: req.user ? publicUser(req.user) : null }));
 

@@ -48,7 +48,7 @@
     let first;
     for (const [k, msg] of Object.entries(errors || {})) {
       if (!msg) continue;
-      const input = form.querySelector(`[name="${k}"]`);
+      const input = form.querySelector(`[name="${k}"]`) || (form.elements?.[k] instanceof Element ? form.elements[k] : null);
       const f = input?.closest('.field');
       if (!f) continue;
       f.classList.add('invalid');
@@ -119,10 +119,41 @@
     'healthy-snacks': { slug: 'cat-mix', shape: 'makhana', color: '#E2C9A6' },
   };
   const catArt = (c) => CAT_ART[c.slug] || { slug: c.slug, shape: 'mix', color: '#A0673A' };
-  // Real photo when the admin uploaded one, generated artwork otherwise
+  // Bundled photos for the sample catalogue (admin uploads always win)
+  const PHOTO = {
+    'california-almonds': 'products/california-almonds', 'chia-seeds': 'products/chia-seeds', 'trail-mix': 'products/trail-mix',
+    'kashmiri-walnuts': 'products/kashmiri-walnuts', 'medjool-dates': 'products/medjool-dates', 'pumpkin-seeds': 'products/pumpkin-seeds',
+    'roasted-makhana': 'products/roasted-makhana', 'seed-mix': 'products/seed-mix', 'w240-cashews': 'products/w240-cashews',
+    'mamra-almonds': 'categories/almonds', 'roasted-pistachios': 'categories/pistachios', 'flax-seeds': 'categories/seeds', 'sunflower-seeds': 'categories/seeds',
+  };
+  const photoFor = (p) => p.image || (PHOTO[p.slug] ? `/img/${PHOTO[p.slug]}.jpg` : null);
+  // Real photo when there is one, generated artwork otherwise
   function pic(p, opts = {}) {
-    return p.image ? `<img class="art" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">` : art(p, opts);
+    const src = photoFor(p);
+    return src ? `<img class="art" src="${esc(src)}" alt="${esc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">` : art(p, opts);
   }
+  // Category tiles on the home page (photo per category slug)
+  const CAT_PHOTO = { almonds: 'almonds', cashews: 'cashews', walnuts: 'walnuts', pistachios: 'pistachios', seeds: 'seeds',
+    'everyday-seeds': 'seeds', 'dates-berries': 'dates-berries', dates: 'dates-berries', 'trail-mixes': 'nut-mixes', 'dry-fruits': 'nut-mixes', 'healthy-snacks': 'nut-mixes' };
+  const catPic = (c) => (CAT_PHOTO[c.slug] ? `<img src="/img/categories/${CAT_PHOTO[c.slug]}.jpg" alt="" loading="lazy">` : art(catArt(c), { label: c.name, count: 30 }));
+
+  // Small inline icons
+  const ICON = {
+    cart: '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M2.5 4h2.2l2.4 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L20.6 8H5.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.5" cy="20.5" r="1.3" fill="currentColor"/><circle cx="17" cy="20.5" r="1.3" fill="currentColor"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 20s-7.5-4.6-9-9.3C2 7.3 4.3 4.5 7.4 4.5c2 0 3.6 1.1 4.6 2.7 1-1.6 2.6-2.7 4.6-2.7 3.1 0 5.4 2.8 4.4 6.2-1.5 4.7-9 9.3-9 9.3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    leaf: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15zM5 19l7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    sprout: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 21v-9M12 12C12 7 8.5 5 4 5c0 4.5 3 7 8 7zM12 12c0-4.5 3.5-7 8-7 0 4.5-3.5 7-8 7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    flask: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3M7.5 15h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    heartRing: '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 19s-6.5-4-7.8-8C3.4 8 5.4 5.5 8 5.5c1.7 0 3.1 1 4 2.3.9-1.3 2.3-2.3 4-2.3 2.6 0 4.6 2.5 3.8 5.5-1.3 4-7.8 8-7.8 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    award: '<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><circle cx="12" cy="9" r="5.5" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="9" r="2.8" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8.5 13.5 7 21l5-2.5 5 2.5-1.5-7.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+    truck: '<svg viewBox="0 0 24 24" width="36" height="36" aria-hidden="true"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="6" cy="17" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="16.5" cy="17" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
+    box: '<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9zM3.5 7.5 12 12l8.5-4.5M12 12v9M7.8 5.2l8.5 4.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+    leafBig: '<svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><path d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15zM5 19l7-7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    grid: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>',
+    sprig: '<svg viewBox="0 0 28 20" width="26" height="18" aria-hidden="true"><path d="M2 10h10" stroke="currentColor" stroke-width="1.4"/><path d="M14 10c3-6 8-7 12-6-1 5-6 7-12 6z" fill="#6FA33E"/><path d="M14 10c2 4 6 6 10 5-1-4-5-6-10-5z" fill="#A8693A"/></svg>',
+    swash: '<svg class="swash" viewBox="0 0 80 22" aria-hidden="true"><path d="M2 16c22-1 48-4 76-12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M20 15c2-5 6-7 10-7-2 4-5 6-10 7zM34 13c2-5 7-8 11-8-2 5-6 7-11 8zM48 10c3-5 7-7 11-7-2 4-6 6-11 7zM27 15c4 0 8 2 9 5-4 0-7-2-9-5zM42 12c4 0 8 2 9 5-4 0-7-2-9-5z" fill="currentColor" opacity=".85"/></svg>',
+  };
 
   // ---------- Category tree helpers ----------
   function findCat(slug, nodes = state.categories, trail = []) {
@@ -140,32 +171,67 @@
   };
 
   // ================= State =================
-  const state = { config: null, user: null, categories: [], cart: store.get('ns_cart', []) };
+  const state = { config: null, user: null, admin: null, categories: [], cart: store.get('ns_cart', []), wish: store.get('ns_wish', []) };
 
   function saveCart() { store.set('ns_cart', state.cart); updateCartBadge(); }
   function updateCartBadge() {
     const n = state.cart.reduce((s, l) => s + l.qty, 0);
-    const b = $('#cartCount'); b.textContent = n; b.hidden = n === 0;
+    $('#cartCount').textContent = n;
   }
+  function updateWishBadge() {
+    const b = $('#wishCount'); b.textContent = state.wish.length; b.hidden = !state.wish.length;
+  }
+  function toggleWish(slug, btn) {
+    const on = !state.wish.includes(slug);
+    state.wish = on ? [slug, ...state.wish] : state.wish.filter((s) => s !== slug);
+    store.set('ns_wish', state.wish); updateWishBadge();
+    $$(`.wish[data-wish="${CSS.escape(slug)}"]`).forEach((b) => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    if (btn) toast(on ? 'Saved to your wishlist <a href="/wishlist" data-link>View</a>' : 'Removed from wishlist');
+  }
+  const wishBtn = (p) => { const on = state.wish.includes(p.slug);
+    return `<button type="button" class="wish${on ? ' on' : ''}" data-wish="${esc(p.slug)}" aria-pressed="${on}" aria-label="Save ${esc(p.name)} to wishlist">${ICON.heart}</button>`; };
   function addToCart(p, v, qty = 1) {
     const line = state.cart.find((l) => l.variantId === v.id);
     const current = line ? line.qty : 0;
     const next = Math.min(current + qty, 20, v.stock);
     if (next <= current) { toast(v.stock ? `Max ${Math.min(20, v.stock)} per item` : 'Out of stock'); return; }
     if (line) line.qty = next;
-    else state.cart.push({ variantId: v.id, qty: next, slug: p.slug, name: p.name, label: v.label, price: v.price, color: p.color, shape: p.shape, image: p.image || null });
+    else state.cart.push({ variantId: v.id, qty: next, slug: p.slug, name: p.name, label: v.label, price: v.price, color: p.color, shape: p.shape, image: photoFor(p) });
     saveCart();
     toast(`Added ${esc(p.name)} · ${esc(v.label)} <a href="/cart" data-link>View cart</a>`);
   }
   const cartItems = () => state.cart.map((l) => ({ variantId: l.variantId, qty: l.qty }));
 
+  // Shopper account menu — the back office has its own login at /admin and never appears here
   function updateHeader() {
-    const link = $('#accountLink');
+    const link = $('#accountLink'); const menu = $('#acctMenu');
     if (state.user) {
-      link.href = state.user.role === 'admin' ? '/admin' : '/account';
-      $('#accountLabel').textContent = state.user.role === 'admin' ? 'Admin' : state.user.name.split(' ')[0];
-    } else { link.href = '/login'; $('#accountLabel').textContent = 'Login'; }
+      link.href = '/account';
+      $('#accountLabel').textContent = `Hi, ${state.user.name.split(' ')[0]}`;
+      menu.innerHTML = `<div class="who"><b>${esc(state.user.name)}</b><span class="small muted">${esc(state.user.email)}</span></div>
+        <a href="/account?tab=orders" data-link>My orders</a><a href="/wishlist" data-link>Wishlist</a>
+        <a href="/account?tab=addresses" data-link>Saved addresses</a><a href="/account?tab=profile" data-link>Profile &amp; password</a>
+        <button type="button" data-logout>Log out</button>`;
+    } else {
+      link.href = '/login';
+      $('#accountLabel').textContent = 'Login / Register';
+      menu.innerHTML = `<div class="who"><b>Welcome</b><span class="small muted">Log in to track orders and save addresses</span></div>
+        <div class="row-btns"><a class="btn btn-sm" href="/login" data-link>Log in</a><a class="btn btn-sm btn-ghost" href="/register" data-link>Sign up</a></div>
+        <a href="/track" data-link>Track an order</a>`;
+    }
   }
+  async function logout() {
+    await api('/api/auth/logout', { method: 'POST', body: {} });
+    state.user = null; updateHeader(); toast('Logged out'); navigate('/');
+  }
+  (() => {
+    const box = $('#acct'); const menu = $('#acctMenu'); let t;
+    const show = () => { clearTimeout(t); menu.hidden = false; };
+    const hide = () => { t = setTimeout(() => { menu.hidden = true; }, 150); };
+    if (matchMedia('(hover: hover)').matches) { box.addEventListener('mouseenter', show); box.addEventListener('mouseleave', hide); }
+    box.addEventListener('focusin', show); box.addEventListener('focusout', hide);
+    menu.addEventListener('click', (e) => { if (e.target.closest('[data-logout]')) logout(); if (e.target.closest('a,button')) menu.hidden = true; });
+  })();
 
   function rememberGuestOrder(orderNo, token) {
     const list = store.get('ns_guest_orders', []).filter((o) => o.orderNo !== orderNo);
@@ -183,7 +249,7 @@
   async function render() {
     const path = location.pathname.replace(/\/+$/, '') || '/';
     const params = new URLSearchParams(location.search);
-    document.body.classList.remove('sticky-on');
+    document.body.classList.remove('sticky-on', 'admin-mode');
     for (const [re, view] of routes) {
       const m = path.match(re);
       if (!m) continue;
@@ -221,23 +287,22 @@
   function buildNav() {
     const roots = state.categories;
     $('#catNav').innerHTML = `
-      <button type="button" class="chip menu-btn" id="menuBtn" aria-controls="drawer" aria-expanded="false">
-        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Categories</button>
-      <a class="chip" data-cat="" href="/shop" data-link>All</a>
+      <a class="chip nav-all" data-cat="" href="/shop" data-link>${ICON.grid}All Products</a>
       ${roots.map((r) => `<div class="nav-item"><a class="chip" data-cat="${r.slug}" href="/shop?c=${r.slug}" data-link>${esc(r.name)}${r.children.length ? caret : ''}</a>
         ${r.children.length ? `<div class="mega"><div class="wrap"><div class="mega-grid">${r.children.map((c) => `
           <div class="mega-col"><a class="mega-h" href="/shop?c=${c.slug}" data-link>${esc(c.name)} <span>${c.count}</span></a>
             ${c.children.map((g) => `<a href="/shop?c=${g.slug}" data-link>${esc(g.name)}</a>`).join('')}
             ${c.blurb && !c.children.length ? `<p>${esc(c.blurb)}</p>` : ''}</div>`).join('')}
-          <a class="mega-art" href="/shop?c=${r.slug}" data-link>${art(catArt(r), { label: r.name, count: 30 })}<span>Shop all ${esc(r.name)} →</span></a>
+          <a class="mega-art" href="/shop?c=${r.slug}" data-link>${catPic(r)}<span>Shop all ${esc(r.name)} →</span></a>
         </div></div></div>` : ''}</div>`).join('')}
-      <a class="chip" href="/track" data-link>Track order</a>`;
+      <a class="chip organic" href="/shop" data-link>${ICON.leaf.replace('width="22" height="22"', 'width="17" height="17"')}Organic Range</a>`;
     const tree = (nodes, depth) => nodes.map((n) => n.children.length
       ? `<details ${depth === 0 ? '' : ''}><summary><a href="/shop?c=${n.slug}" data-link>${esc(n.name)}</a><span class="count">${n.count}</span>${caret}</summary>
           <div class="d-sub">${tree(n.children, depth + 1)}</div></details>`
       : `<a class="d-leaf" href="/shop?c=${n.slug}" data-link>${esc(n.name)}<span class="count">${n.count}</span></a>`).join('');
     $('#drawerNav').innerHTML = `<a class="d-leaf strong" href="/shop" data-link>All products</a>${tree(roots, 0)}
-      <hr class="rule"><a class="d-leaf" href="/track" data-link>Track your order</a><a class="d-leaf" href="/account" data-link>My account</a>
+      <hr class="rule"><a class="d-leaf" href="/track" data-link>Track your order</a><a class="d-leaf" href="/wishlist" data-link>Wishlist</a>
+      ${state.user ? '<a class="d-leaf" href="/account" data-link>My account</a>' : '<a class="d-leaf strong" href="/login" data-link>Log in / Sign up</a>'}
       <a class="d-leaf" href="/pages/contact" data-link>Contact us</a>`;
 
     const drawer = $('#drawer');
@@ -261,16 +326,16 @@
     const off = pctOff(v);
     const allOut = p.variants.every((x) => x.stock <= 0);
     return `<article class="pcard" data-slug="${esc(p.slug)}">
-      <a class="thumb" href="/p/${esc(p.slug)}" data-link aria-label="${esc(p.name)}">${pic(p)}${off ? `<span class="tag">${off}% OFF</span>` : ''}</a>
+      <a class="thumb" href="/p/${esc(p.slug)}" data-link aria-label="${esc(p.name)}">${pic(p)}${off ? `<span class="tag">${off}% OFF</span>` : ''}</a>${wishBtn(p)}
       <div class="body">
         <a class="name" href="/p/${esc(p.slug)}" data-link>${esc(p.name)}</a>
         <div class="short">${esc(p.short)}</div>
         ${p.variants.length > 1
-          ? `<select aria-label="Pack size" class="vsel">${p.variants.map((x) => `<option value="${x.id}" ${x.id === v.id ? 'selected' : ''} ${x.stock <= 0 ? 'disabled' : ''}>${esc(x.label)} — ${money(x.price)}${x.stock <= 0 ? ' (sold out)' : ''}</option>`).join('')}</select>`
-          : `<div class="small muted">${esc(v.label)}</div>`}
+          ? `<select aria-label="Pack size" class="vsel">${p.variants.map((x) => `<option value="${x.id}" ${x.id === v.id ? 'selected' : ''} ${x.stock <= 0 ? 'disabled' : ''}>${esc(x.label)} – ${money(x.price)}${x.stock <= 0 ? ' (sold out)' : ''}</option>`).join('')}</select>`
+          : `<div class="pack">${esc(v.label)} – ${money(v.price)}</div>`}
         <div class="foot">
           <div><span class="price">${money(v.price)}</span>${v.mrp > v.price ? `<span class="mrp">${money(v.mrp)}</span>` : ''}</div>
-          ${allOut ? '<span class="oos">Sold out</span>' : '<button class="add-btn" type="button">Add</button>'}
+          ${allOut ? '<span class="oos">Sold out</span>' : `<button class="add-btn" type="button">${ICON.cart}Add</button>`}
         </div>
       </div></article>`;
   }
@@ -284,6 +349,7 @@
         $('.foot > div', card).innerHTML = `<span class="price">${money(v.price)}</span>${v.mrp > v.price ? `<span class="mrp">${money(v.mrp)}</span>` : ''}`;
       });
       $('.add-btn', card)?.addEventListener('click', () => addToCart(p, cur(), 1));
+      $('.wish', card)?.addEventListener('click', (e) => toggleWish(p.slug, e.currentTarget));
     });
   }
 
@@ -306,39 +372,53 @@
   }
 
   // ================= Views =================
+  const HOME_CATS = ['almonds', 'cashews', 'walnuts', 'pistachios', 'seeds', 'dates-berries', 'trail-mixes'];
   route(/^\/$/, async () => {
     setTitle();
     const featured = await api('/api/products?featured=1');
     const cfg = state.config;
+    // Category tiles: the mockup's set when those categories exist, otherwise the top-level ones
+    let tiles = HOME_CATS.map((slug) => findCat(slug)?.node).filter(Boolean);
+    if (tiles.length < 4) tiles = state.categories;
+    const rem = featured.length % 4;
     main.innerHTML = `
-      <section class="hero"><div class="wrap hero-inner">
-        <div>
-          <h1>Real nuts. Real seeds. <em>Nothing extra.</em></h1>
-          <p>${esc(cfg.store.tagline)}. Hand-graded, nitrogen-flushed packs delivered across India — free shipping above ${money(cfg.freeShippingAbove)}.</p>
-          <div class="hero-ctas"><a class="btn" href="/shop" data-link>Shop the range</a><a class="btn btn-ghost" href="/shop?c=seeds" data-link>Explore seeds</a></div>
-        </div>
-        <div class="hero-art">${art({ slug: 'hero', shape: 'mix' }, { bg: '#E9DCC4', count: 120, scale: 1.25, label: 'Assorted nuts, seeds and dried fruit' })}</div>
-      </div></section>
+      <section class="hero"><div class="hero-photo" role="img" aria-label="Wooden bowl of almonds, cashews, walnuts and pistachios"></div>
+        <div class="wrap hero-inner"><div class="hero-copy">
+          <div class="eyebrow">Pure • Natural • Healthy</div>
+          <h1>Premium Nuts &amp; Seeds <em>for a Healthier You</em></h1>
+          <p class="lead">Handpicked, naturally processed and packed fresh with no added preservatives.</p>
+          <div class="hero-feats">
+            <div><span class="ring">${ICON.leaf}</span>100% Natural</div>
+            <div><span class="ring">${ICON.flask}</span>No Preservatives</div>
+            <div><span class="ring">${ICON.sprout}</span>Rich in Nutrients</div>
+            <div><span class="ring">${ICON.heartRing}</span>Healthy Snacking</div>
+          </div>
+          <div class="hero-ctas"><a class="btn btn-lg" href="/shop" data-link>Shop Now ${ICON.arrow}</a><a class="btn btn-lg btn-ghost" href="/shop" data-link>Explore Organic Range</a></div>
+        </div></div>
+      </section>
 
       <section class="wrap section">
-        <div class="trust">
-          <div><strong>Packed fresh weekly</strong>Small batches, never warehoused for months</div>
-          <div><strong>No added sugar</strong>Nothing artificial in our dry fruits</div>
-          <div><strong>Secure payments</strong>UPI, cards, net banking, wallets</div>
-          <div><strong>Cash on Delivery</strong>Pay at your doorstep, pan-India</div>
+        <div class="title-orn"><span class="orn">${'<i></i>'}${ICON.sprig}</span><h2>Shop by Category</h2><span class="orn r">${'<i></i>'}${ICON.sprig.replace('<svg', '<svg style="transform:scaleX(-1)"')}</span></div>
+        <div class="cat-strip">${tiles.map((c) => `
+          <a class="cat-tile" href="/shop?c=${c.slug}" data-link><span class="ph">${catPic(c)}</span><b>${esc(c.slug === 'trail-mixes' ? 'Nut Mixes' : c.name)}</b></a>`).join('')}</div>
+      </section>
+
+      <section class="wrap section" style="padding-top:8px">
+        <div class="section-head"><h2>Bestsellers ${ICON.swash}</h2><a href="/shop" data-link>See everything ${ICON.arrow}</a></div>
+        <div class="grid" id="featGrid">${featured.map(productCard).join('')}
+          <a class="promo ${rem === 1 ? 'span-3' : rem === 2 ? 'span-2' : ''}" href="/shop" data-link><span class="ph"></span>
+            <span class="txt"><div class="kicker">Natural goodness</div><h2>Organic Nuts &amp; Seeds</h2>
+              <p>100% natural, nutrient-rich and sourced from trusted farms.</p><span class="btn">Shop Organic Range ${ICON.arrow}</span></span></a>
         </div>
       </section>
 
-      <section class="wrap section" style="padding-top:0">
-        <div class="section-head"><h2>Shop by category</h2><a href="/shop" data-link>View all →</a></div>
-        <div class="cat-grid">${state.categories.map((c) => `
-          <a class="cat-card" href="/shop?c=${c.slug}" data-link>${art(catArt(c), { label: c.name })}
-            <h3>${esc(c.name)}</h3><span>${c.children.length ? `${c.children.map((x) => esc(x.name)).slice(0, 3).join(' · ')}` : `${c.count} products`}</span></a>`).join('')}</div>
-      </section>
-
-      <section class="wrap section" style="padding-top:0">
-        <div class="section-head"><h2>Bestsellers</h2><a href="/shop" data-link>See everything →</a></div>
-        <div class="grid" id="featGrid">${featured.map(productCard).join('')}</div>
+      <section class="wrap" style="padding-bottom:24px">
+        <div class="features">
+          <div>${ICON.leafBig}<span><b>100% Natural</b>No artificial additives</span></div>
+          <div>${ICON.award}<span><b>Premium Quality</b>Handpicked &amp; farm sourced</span></div>
+          <div>${ICON.truck}<span><b>Free Shipping</b>${cfg.freeShippingAbove ? `Above ${money(cfg.freeShippingAbove)}` : 'On every order'}</span></div>
+          <div>${ICON.box}<span><b>Safe &amp; Fresh Delivery</b>Packed weekly for longer freshness</span></div>
+        </div>
       </section>`;
     bindCards($('#featGrid'), featured);
   });
@@ -408,7 +488,7 @@
     main.innerHTML = `<div class="wrap page has-sticky">
       <div class="crumbs"><a href="/" data-link>Home</a>${p.path.map((n) => ` / <a href="/shop?c=${n.slug}" data-link>${esc(n.name)}</a>`).join('')} / <span>${esc(p.name)}</span></div>
       <div class="pdp">
-        <div class="pdp-art">${pic(p, { scale: 1.6, count: Math.round((DENSITY[p.shape] || 40) * 0.55) })}</div>
+        <div class="pdp-art">${pic(p, { scale: 1.6, count: Math.round((DENSITY[p.shape] || 40) * 0.55) })}${pctOff(v) ? `<span class="tag">${pctOff(v)}% OFF</span>` : ''}${wishBtn(p)}</div>
         <div class="pdp-info">
           <h1>${esc(p.name)}</h1>
           <p class="muted">${esc(p.short)}</p>
@@ -458,6 +538,7 @@
     $('#qMinus').onclick = () => { qty = Math.max(1, qty - 1); sync(); };
     $('#qPlus').onclick = () => { qty = Math.min(20, v.stock, qty + 1); sync(); };
     $('#addBtn').onclick = $('#stickyAdd').onclick = () => addToCart(p, v, qty);
+    $('.pdp-art .wish').onclick = (e) => toggleWish(p.slug, e.currentTarget);
     sync();
     if (related.length) bindCards($('#relGrid'), related);
   });
@@ -493,7 +574,8 @@
         <aside>${quote ? summaryBox(q, { shipNote: state.config.shippingZones.length ? 'Shipping may vary by state — confirmed at checkout.' : '' }) : '<div class="card" id="summaryAction"></div>'}</aside>
       </div></div>`;
     $('#summaryAction').innerHTML = `<a class="btn btn-block" style="margin-top:16px" href="/checkout" data-link ${problem ? 'aria-disabled="true"' : ''}>Proceed to checkout</a>
-      <a class="btn btn-ghost btn-block" style="margin-top:8px" href="/shop" data-link>Continue shopping</a>`;
+      <a class="btn btn-ghost btn-block" style="margin-top:8px" href="/shop" data-link>Continue shopping</a>
+      ${state.user ? '' : '<p class="small muted" style="margin:12px 0 0;text-align:center">No account needed — guest checkout available. Or <a href="/login?next=/checkout" data-link>log in</a> for saved addresses.</p>'}`;
     main.querySelector('.card').addEventListener('click', (e) => {
       const b = e.target.closest('button[data-act]'); if (!b) return;
       const id = Number(b.closest('.cart-line').dataset.id);
@@ -519,15 +601,10 @@
 
     main.innerHTML = `<div class="wrap page"><div class="crumbs"><a href="/cart" data-link>Cart</a> / Checkout</div>
       <div class="page-head"><h1>Checkout</h1></div>
-      <form class="two-col" id="coForm" novalidate>
+      <div class="two-col">
         <div class="stack">
-          <section class="card">
-            <div class="step-title"><span class="num">1</span><h3>Contact</h3></div>
-            ${state.user
-              ? `<p style="margin:0">Signed in as <b>${esc(state.user.email)}</b></p>`
-              : `<div class="alert info" style="margin-bottom:16px">Checking out as a guest. <a href="/login?next=/checkout" data-link><b>Log in</b></a> or <a href="/register?next=/checkout" data-link><b>create an account</b></a> to track orders and save addresses.</div>
-                 ${field('email', 'Email for order updates', { type: 'email', attrs: 'autocomplete="email" required' })}`}
-          </section>
+          <section class="card" id="contactCard"></section>
+          <form class="stack" id="coForm" novalidate>
           <section class="card">
             <div class="step-title"><span class="num">2</span><h3>Delivery address</h3></div>
             ${addresses.length ? `<div id="savedAddr">${addresses.map((a, i) => `
@@ -557,11 +634,13 @@
               <span><b>Cash on Delivery</b><small id="codNote"></small></span></label>
             <div id="coError"></div>
           </section>
+          </form>
         </div>
         <aside id="coAside"></aside>
-      </form></div>`;
+      </div></div>`;
 
     const form = $('#coForm');
+    drawContact($('#contactCard'));
     let busy = false;
     const placeLabel = () => `Place order · ${money(quote.total)}`;
     function drawSummary() {
@@ -608,10 +687,11 @@
       const method = fd.get('paymentMethod');
       $('#coError').innerHTML = '';
       if (!method) { $('#coError').innerHTML = '<div class="alert">Choose a payment method.</div>'; return; }
+      if (!state.user && coMode !== 'guest') { $('#contactCard').scrollIntoView({ block: 'center', behavior: 'smooth' }); toast('Finish logging in, or choose Guest checkout', 3500); return; }
       busy = true; drawSummary();
       try {
         const res = await api('/api/orders', { method: 'POST', body: {
-          items: cartItems(), email: fd.get('email') || undefined, address, paymentMethod: method, saveAddress: !!fd.get('saveAddress'),
+          items: cartItems(), email: state.user ? undefined : ($('#f-email')?.value || undefined), address, paymentMethod: method, saveAddress: !!fd.get('saveAddress'),
         } });
         state.cart = []; saveCart();
         if (!state.user) rememberGuestOrder(res.orderNo, res.token);
@@ -623,6 +703,7 @@
         busy = false; drawSummary();
         if (err.data?.errors) {
           if (choice && choice !== 'new' && !err.data.errors.email) { form.addrChoice.value = 'new'; $('#addrFields').hidden = false; }
+          if (err.data.errors.email && !state.user) { coMode = 'guest'; }
           showErrors(form, err.data.errors);
         }
         $('#coError').innerHTML = `<div class="alert">${esc(err.message)}</div>`;
@@ -630,6 +711,54 @@
       }
     });
   });
+
+  // Step 1 of checkout: continue as guest, or log in / sign up without leaving the page
+  let coMode = 'guest';
+  function drawContact(box) {
+    if (state.user) {
+      box.innerHTML = `<div class="step-title"><span class="num">1</span><h3>Contact</h3></div>
+        <div class="signed-in"><span>Signed in as <b>${esc(state.user.name)}</b> · ${esc(state.user.email)}</span>
+          <button type="button" class="link-btn" id="coLogout">Not you? Log out</button></div>`;
+      $('#coLogout').onclick = async () => { await api('/api/auth/logout', { method: 'POST', body: {} }); state.user = null; updateHeader(); buildNav(); render(); };
+      return;
+    }
+    const tab = (k, t, sub) => `<button type="button" data-mode="${k}" class="${coMode === k ? 'on' : ''}">${t}<small>${sub}</small></button>`;
+    box.innerHTML = `<div class="step-title"><span class="num">1</span><h3>How would you like to check out?</h3></div>
+      <div class="segmented" role="tablist">${tab('guest', 'Guest checkout', 'No account needed')}${tab('login', 'Log in', 'Returning customer')}${tab('signup', 'Sign up', 'Save addresses')}</div>
+      <div id="coAuth"></div>`;
+    const body = $('#coAuth');
+    if (coMode === 'guest') {
+      body.innerHTML = `${field('email', 'Email for order updates', { type: 'email', attrs: 'form="coForm" autocomplete="email" required placeholder="you@example.com"' })}
+        <p class="small muted" style="margin:0">We'll send your order confirmation and tracking here. Create an account later with the same email and this order is added to it automatically.</p>`;
+    } else if (coMode === 'login') {
+      body.innerHTML = `<form id="ciForm" novalidate>${field('ci_email', 'Email', { type: 'email', attrs: 'autocomplete="email"' })}
+        ${field('ci_password', 'Password', { type: 'password', attrs: 'autocomplete="current-password"' })}
+        <div id="ciErr"></div><button class="btn btn-block">Log in &amp; continue</button></form>`;
+    } else {
+      body.innerHTML = `<form id="ciForm" novalidate><div class="grid-2">${field('name', 'Full name', { attrs: 'autocomplete="name"' })}
+        ${field('phone', 'Mobile number', { type: 'tel', attrs: 'autocomplete="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"' })}</div>
+        ${field('email', 'Email', { type: 'email', attrs: 'autocomplete="email"' })}
+        ${field('password', 'Password', { type: 'password', attrs: 'autocomplete="new-password" placeholder="8+ characters, letters & numbers"' })}
+        <div id="ciErr"></div><button class="btn btn-block">Create account &amp; continue</button></form>`;
+    }
+    $$('.segmented button', box).forEach((b) => b.onclick = () => { coMode = b.dataset.mode; drawContact(box); $('input', body)?.focus(); });
+    $('#ciForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = e.target; const fd = new FormData(f); const btn = $('button', f); btn.disabled = true;
+      try {
+        const r = coMode === 'login'
+          ? await api('/api/auth/login', { method: 'POST', body: { email: fd.get('ci_email'), password: fd.get('ci_password') } })
+          : await api('/api/auth/register', { method: 'POST', body: Object.fromEntries(fd) });
+        state.user = r.user; updateHeader(); buildNav();
+        toast(coMode === 'login' ? `Welcome back, ${esc(r.user.name.split(' ')[0])}` : 'Account created — welcome!');
+        coMode = 'guest'; render();
+      } catch (err) {
+        btn.disabled = false;
+        if (err.data?.errors) showErrors(f, err.data.errors);
+        $('#ciErr').innerHTML = `<div class="alert">${esc(err.message)}</div>`;
+      }
+    });
+  }
 
   // ---------- Payments ----------
   async function openRazorpay(orderNo, token, rp) {
@@ -749,60 +878,71 @@
     });
   });
 
-  // ---------- Auth ----------
+  // ---------- Auth (shoppers only — staff sign in at /admin) ----------
   function authAfter(params) {
     const next = params.get('next');
-    return next && next.startsWith('/') && !next.startsWith('//') ? next : (state.user?.role === 'admin' ? '/admin' : '/account');
+    return next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/admin') ? next : '/account';
   }
-  route(/^\/login$/, async (_m, params) => {
-    setTitle('Log in');
+  function authPage(mode, params) {
+    setTitle(mode === 'login' ? 'Log in' : 'Create account');
     if (state.user) return navigate(authAfter(params), { replace: true });
     const next = params.get('next') || '';
-    main.innerHTML = `<div class="wrap page auth"><h1>Welcome back</h1><p class="muted">Log in to track orders and check out faster.</p>
-      <form class="card" id="loginForm" novalidate>
-        ${field('email', 'Email', { type: 'email', attrs: 'autocomplete="email" required' })}
-        ${field('password', 'Password', { type: 'password', attrs: 'autocomplete="current-password" required' })}
-        <div id="loginErr"></div><button class="btn btn-block">Log in</button>
-        <div class="divider">New here?</div>
-        <a class="btn btn-ghost btn-block" href="/register${next ? `?next=${encodeURIComponent(next)}` : ''}" data-link>Create an account</a>
-        ${next === '/checkout' ? '<a class="btn btn-ghost btn-block" style="margin-top:8px;border-color:transparent" href="/checkout" data-link>Continue as guest →</a>' : ''}
-      </form></div>`;
-    $('#loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      try {
-        const r = await api('/api/auth/login', { method: 'POST', body: { email: fd.get('email'), password: fd.get('password') } });
-        state.user = r.user; updateHeader(); toast(`Welcome back, ${esc(r.user.name.split(' ')[0])}`);
-        navigate(authAfter(params), { replace: true });
-      } catch (err) { $('#loginErr').innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
-    });
-  });
-
-  route(/^\/register$/, async (_m, params) => {
-    setTitle('Create account');
-    if (state.user) return navigate(authAfter(params), { replace: true });
-    const next = params.get('next') || '';
-    main.innerHTML = `<div class="wrap page auth"><h1>Create your account</h1><p class="muted">Save addresses, track every order, reorder in two taps.</p>
-      <form class="card" id="regForm" novalidate>
-        ${field('name', 'Full name', { attrs: 'autocomplete="name"' })}
-        ${field('email', 'Email', { type: 'email', attrs: 'autocomplete="email"' })}
-        ${field('phone', 'Mobile number', { type: 'tel', attrs: 'autocomplete="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"' })}
-        ${field('password', 'Password', { type: 'password', attrs: 'autocomplete="new-password" placeholder="8+ characters, letters & numbers"' })}
-        <div id="regErr"></div><button class="btn btn-block">Create account</button>
-        <p class="small muted" style="margin:12px 0 0">Already registered? <a href="/login${next ? `?next=${encodeURIComponent(next)}` : ''}" data-link>Log in</a></p>
-      </form></div>`;
-    $('#regForm').addEventListener('submit', async (e) => {
+    const q = next ? `?next=${encodeURIComponent(next)}` : '';
+    const guestOk = state.cart.length > 0;
+    main.innerHTML = `<div class="wrap page auth">
+      <div class="auth-hero">${$('.brand-mark').outerHTML}
+        <h1 style="font-size:30px">${mode === 'login' ? 'Welcome back' : 'Create your account'}</h1>
+        <p class="muted" style="margin:0">${mode === 'login' ? 'Log in to track orders and check out faster.' : 'Save addresses, track every order and reorder in two taps.'}</p></div>
+      <div class="card">
+        <div class="segmented two"><a class="${mode === 'login' ? 'on' : ''}" href="/login${q}" data-link>Log in</a><a class="${mode === 'signup' ? 'on' : ''}" href="/register${q}" data-link>Sign up</a></div>
+        ${mode === 'login' ? `<form id="authForm" novalidate>
+          ${field('email', 'Email', { type: 'email', attrs: 'autocomplete="email" required' })}
+          ${field('password', 'Password', { type: 'password', attrs: 'autocomplete="current-password" required' })}
+          <div id="authErr"></div><button class="btn btn-block">Log in</button>
+          <p class="small muted" style="margin:12px 0 0;text-align:center">New here? <a href="/register${q}" data-link>Create an account</a></p></form>`
+        : `<form id="authForm" novalidate>
+          ${field('name', 'Full name', { attrs: 'autocomplete="name"' })}
+          ${field('email', 'Email', { type: 'email', attrs: 'autocomplete="email"' })}
+          ${field('phone', 'Mobile number', { type: 'tel', attrs: 'autocomplete="tel" inputmode="numeric" maxlength="14" placeholder="10-digit mobile"' })}
+          ${field('password', 'Password', { type: 'password', attrs: 'autocomplete="new-password" placeholder="8+ characters, letters & numbers"' })}
+          <div id="authErr"></div><button class="btn btn-block">Create account</button>
+          <p class="small muted" style="margin:12px 0 0;text-align:center">Already registered? <a href="/login${q}" data-link>Log in</a></p></form>`}
+      </div>
+      ${guestOk ? `<div class="guest-cta"><span><b>Just want to order?</b><br><span class="small muted">Check out as a guest — no account needed.</span></span>
+        <a class="btn btn-ghost btn-sm" href="/checkout" data-link>Continue as guest →</a></div>` : ''}
+    </div>`;
+    $('.auth-hero .brand-mark').removeAttribute('id');
+    $('#authForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target; const fd = new FormData(form);
       try {
-        const r = await api('/api/auth/register', { method: 'POST', body: Object.fromEntries(fd) });
-        state.user = r.user; updateHeader(); toast('Account created — welcome!');
+        const r = mode === 'login'
+          ? await api('/api/auth/login', { method: 'POST', body: { email: fd.get('email'), password: fd.get('password') } })
+          : await api('/api/auth/register', { method: 'POST', body: Object.fromEntries(fd) });
+        state.user = r.user; updateHeader(); buildNav();
+        toast(mode === 'login' ? `Welcome back, ${esc(r.user.name.split(' ')[0])}` : 'Account created — welcome!');
         navigate(authAfter(params), { replace: true });
       } catch (err) {
         showErrors(form, err.data?.errors);
-        $('#regErr').innerHTML = `<div class="alert">${esc(err.message)}</div>`;
+        $('#authErr').innerHTML = `<div class="alert">${esc(err.message)}</div>`;
       }
     });
+  }
+  route(/^\/login$/, async (_m, params) => authPage('login', params));
+  route(/^\/register$/, async (_m, params) => authPage('signup', params));
+
+  // ---------- Wishlist (saved on this device) ----------
+  route(/^\/wishlist$/, async () => {
+    setTitle('Wishlist');
+    const all = state.wish.length ? await api('/api/products') : [];
+    const list = state.wish.map((slug) => all.find((p) => p.slug === slug)).filter(Boolean);
+    main.innerHTML = `<div class="wrap page"><div class="section-head"><h1 style="margin:0">Your wishlist ${ICON.swash}</h1>${list.length ? '<a href="/shop" data-link>Keep shopping ' + ICON.arrow + '</a>' : ''}</div>
+      ${list.length ? `<div class="grid" id="wishGrid">${list.map(productCard).join('')}</div>`
+        : `<div class="empty"><h2>Nothing saved yet</h2><p class="muted">Tap the heart on any product to save it here.</p><a class="btn" href="/shop" data-link>Browse products</a></div>`}</div>`;
+    if (list.length) {
+      bindCards($('#wishGrid'), list);
+      $('#wishGrid').addEventListener('click', (e) => { if (e.target.closest('.wish')) setTimeout(render, 250); });
+    }
   });
 
   // ---------- Account ----------
@@ -813,10 +953,10 @@
     const tabs = [['orders', 'Orders'], ['addresses', 'Addresses'], ['profile', 'Profile']];
     main.innerHTML = `<div class="wrap page"><div class="page-head" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
         <div><h1 style="margin:0">Hi, ${esc(state.user.name.split(' ')[0])}</h1><span class="muted small">${esc(state.user.email)}</span></div>
-        <div style="display:flex;gap:8px">${state.user.role === 'admin' ? '<a class="btn btn-sm" href="/admin" data-link>Admin desk</a>' : ''}<button class="btn btn-sm btn-ghost" id="logout">Log out</button></div></div>
+        <div style="display:flex;gap:8px"><button class="btn btn-sm btn-ghost" id="logout">Log out</button></div></div>
       <div class="tabs">${tabs.map(([k, l]) => `<a class="chip ${k === tab ? 'active' : ''}" href="/account?tab=${k}" data-link>${l}</a>`).join('')}</div>
       <div id="tabBody"><div class="loading"><div class="spinner"></div></div></div></div>`;
-    $('#logout').onclick = async () => { await api('/api/auth/logout', { method: 'POST', body: {} }); state.user = null; updateHeader(); navigate('/'); };
+    $('#logout').onclick = logout;
     const body = $('#tabBody');
 
     if (tab === 'orders') {
@@ -871,12 +1011,30 @@
   });
 
   // ---------- Admin back office (loaded only when needed) ----------
+  // Staff use their own sign-in here; it is not linked from anywhere in the shop
   route(/^\/admin$/, async (m, params) => {
-    if (!state.user) return navigate('/login?next=/admin', { replace: true });
-    if (state.user.role !== 'admin') return navigate('/account', { replace: true });
-    setTitle('Admin');
+    document.body.classList.add('admin-mode');
+    if (!state.admin) { try { state.admin = (await api('/api/auth/admin/me')).admin; } catch { /* offline */ } }
+    if (!state.admin) {
+      setTitle('Back office sign-in');
+      main.innerHTML = `<div class="wrap page auth"><div class="auth-hero"><h1 style="font-size:28px">Back office</h1><p class="muted" style="margin:0">Staff sign-in</p></div>
+        <form class="card" id="admForm" novalidate>${field('email', 'Email', { type: 'email', attrs: 'autocomplete="username"' })}
+          ${field('password', 'Password', { type: 'password', attrs: 'autocomplete="current-password"' })}
+          <div id="admErr"></div><button class="btn btn-block">Sign in</button></form></div>`;
+      $('#admForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+          state.admin = (await api('/api/auth/admin/login', { method: 'POST', body: { email: fd.get('email'), password: fd.get('password') } })).admin;
+          render();
+        } catch (err) { $('#admErr').innerHTML = `<div class="alert">${esc(err.message)}</div>`; }
+      });
+      return;
+    }
+    setTitle('Back office');
     await loadScript('/js/admin.js');
     await window.NSAdmin(m, params);
+    document.body.classList.add('admin-mode');
   });
 
   // ---------- Policy pages (Razorpay requires these to activate your account) ----------
@@ -924,12 +1082,13 @@
     state.config = config; state.user = me.user; state.categories = categories;
     const s = config.store;
     $('#brandName').textContent = s.name; $('#footBrand').textContent = s.name;
-    $('#footTag').textContent = s.tagline;
     $('#footLegal').textContent = [s.fssai && `FSSAI Lic. No. ${s.fssai}`, s.gstin && `GSTIN ${s.gstin}`].filter(Boolean).join(' · ');
     $('#footBase').textContent = `© ${new Date().getFullYear()} ${s.name}. All prices in INR, inclusive of GST.`;
-    $('#announce').textContent = `Free shipping above ${money(config.freeShippingAbove)}${config.codEnabled ? ' · Cash on Delivery available' : ''} · Packed fresh every week`;
+    $('#annShip').textContent = config.freeShippingAbove ? `Free Shipping Above ${money(config.freeShippingAbove)}` : 'Free Shipping on All Orders';
+    if (!config.codEnabled) { $('#annCod').remove(); $('#annCodSep').remove(); }
+    $('#footTag').textContent = s.tagline || $('#footTag').textContent;
     buildNav();
-    updateHeader(); updateCartBadge();
+    updateHeader(); updateCartBadge(); updateWishBadge();
     await render();
   }
   boot().catch((e) => { main.innerHTML = `<div class="wrap page"><div class="alert">Could not load the store: ${esc(e.message)}</div></div>`; });

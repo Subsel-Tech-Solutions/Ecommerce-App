@@ -70,7 +70,7 @@ function loadOrderFor(req) {
   const o = db.prepare('SELECT * FROM orders WHERE order_no=?').get(String(req.params.orderNo));
   if (!o) return null;
   const t = req.query.t || req.body?.t;
-  if (req.user && (req.user.role === 'admin' || req.user.id === o.user_id)) return o;
+  if (req.admin || (req.user && req.user.id === o.user_id)) return o;
   if (t && safeEqual(t, guestToken(o.order_no))) return o;
   return null;
 }
