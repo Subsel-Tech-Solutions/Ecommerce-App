@@ -1032,7 +1032,7 @@
       return;
     }
     setTitle('Back office');
-    await loadScript('/js/admin.js?v=20261105');
+    await loadScript('/js/admin.js?v=20261106');
     await window.NSAdmin(m, params);
     document.body.classList.add('admin-mode');
   });

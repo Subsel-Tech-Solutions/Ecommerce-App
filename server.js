@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 
 const config = require('./src/config');
-require('./src/db'); // creates + seeds the database
+const { db } = require('./src/db'); // creates + seeds the database
 const { attachUser } = require('./src/auth');
 const catalog = require('./src/routes/catalog');
 const account = require('./src/routes/account');
@@ -53,6 +53,13 @@ app.use('/api/orders', orders.router);
 app.use('/api/admin', admin);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
+// Product photos live in the database; older ones may still be files in data/uploads
+app.get('/uploads/:name', (req, res, next) => {
+  const row = db.prepare('SELECT mime, data FROM images WHERE name = ?').get(req.params.name);
+  if (!row) return next();
+  res.set({ 'Content-Type': row.mime, 'Cache-Control': 'public, max-age=2592000, immutable' });
+  res.end(Buffer.from(row.data));
+});
 app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads'), { maxAge: '30d', immutable: true, fallthrough: false }));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: config.isProd ? '1h' : 0 }));
 // Single-page app: every non-API route serves index.html

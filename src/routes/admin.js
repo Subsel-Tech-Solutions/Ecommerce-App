@@ -291,7 +291,8 @@ router.post('/uploads', (req, res) => {
     || (m[1] === 'webp' && sig.subarray(0, 4).toString() === 'RIFF' && sig.subarray(8, 12).toString() === 'WEBP');
   if (!ok) return bad(res, 'That file is not a valid image.');
   const name = `${crypto.randomBytes(12).toString('hex')}.${m[1] === 'jpeg' ? 'jpg' : m[1]}`;
-  fs.writeFileSync(path.join(UPLOAD_DIR, name), buf);
+  // Kept in the database (not loose files) so photos survive redeploys/restarts along with the products
+  db.prepare('INSERT INTO images (name, mime, data) VALUES (?, ?, ?)').run(name, `image/${m[1]}`, buf);
   res.status(201).json({ url: `/uploads/${name}` });
 });
 

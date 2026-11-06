@@ -262,8 +262,9 @@
 
   function resizeImage(file, max) {
     return new Promise((resolve, reject) => {
+      // Read as a data: URL — the site's Content-Security-Policy blocks blob: images
+      const reader = new FileReader();
       const img = new Image();
-      const url = URL.createObjectURL(file);
       img.onload = () => {
         const scale = Math.min(1, max / Math.max(img.width, img.height));
         const c = document.createElement('canvas');
@@ -271,11 +272,12 @@
         const ctx = c.getContext('2d');
         ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
         ctx.drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(url);
         resolve(c.toDataURL('image/jpeg', 0.86));
       };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image')); };
-      img.src = url;
+      img.onerror = () => reject(new Error('Could not read that image — try a JPG or PNG'));
+      reader.onload = () => { img.src = reader.result; };
+      reader.onerror = () => reject(new Error('Could not read that file'));
+      reader.readAsDataURL(file);
     });
   }
 
